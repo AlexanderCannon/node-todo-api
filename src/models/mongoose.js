@@ -15,5 +15,12 @@ function saveNew(req, res, model) {
     res.status(400).send(e);
   });
 }
+function getAll(req, res, model) {
+  model.find().then((todos) => {
+    res.status(200).send({ todos });
+  }, (e) => {
+    res.status(400).send(e);
+  });
+}
 
-module.exports = { mongoose, saveNew };
+module.exports = { mongoose, saveNew, getAll };
