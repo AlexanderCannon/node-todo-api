@@ -16,12 +16,12 @@ MongoClient.connect('mongodb://localhost:27017/TodoApp', (err, db) => {
     return console.log("Failed to connect to mongodb");
   }
   console.log('Connected to MongoDB server');
-  // db.collection('Todos').insertOne(mockRecord, (err, res) => {
-  //   if (err) {
-  //     return console.log('Unable to insert todo', err)
-  //   }
-  //   console.log(JSON.stringify(res.ops, undefined, 2));
-  // });
+  db.collection('Todos').insertOne(mockRecord, (err, res) => {
+    if (err) {
+      return console.log('Unable to insert todo', err)
+    }
+    console.log(JSON.stringify(res.ops, undefined, 2));
+  });
 
   // db.collection('Users').insertOne(mockUser, (err, res) => {
   //   if (err) {
