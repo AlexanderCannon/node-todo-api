@@ -10,9 +10,9 @@ function saveNew(req, res, model) {
     text: req.body.text
   });
   model.save().then((doc) => {
-    res.send(doc).status(200);
+    res.status(201).send(doc);
   }, (e) => {
-    res.send(e).status(400);
+    res.status(400).send(e);
   });
 }
 

@@ -9,12 +9,12 @@ const app = express();
 
 app.use(bodyParser.json());
 
-app.post('/todo', (req, res) => {
-  saveNew(req, res, Todo);
-});
+app.post('/todo', (req, res) => { saveNew(req, res, Todo) });
 
 const port = process.env.PORT || 3000
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
+
+module.exports = { app }
