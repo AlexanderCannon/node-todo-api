@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
-const { ObjectID } = require('mongodb')
+const { ObjectID } = require('mongodb');
+const _ = require('lodash');
 
 const dbUrl = process.env.MONGODB_URI || "mongodb://localhost:27017/Todo"
 
@@ -53,7 +54,23 @@ function removeById(req, res, Model) {
 }
 
 function updateById(req, res, Model) {
-  
+  var body = _.pick(req.body, ['text', 'completed']);
+  if (!ObjectID.isValid(req.params.id)) {
+    return res.status(400).send(`ID ${req.params.id} appears to be invalid`);
+  }
+  if (body.completed) {
+    body.completedAt = new Date().getTime();
+  } else {
+    body.completed = false;
+    body.completedAt = null;
+  }
+  Model.findByIdAndUpdate(req.params.id, { $set: body }, { new: true }).then((response) => {
+    if (!response) {
+      return res.status(404).send(`Could not find document with id ${req.params.id}`);
+    }
+    res.send({ response });
+  }).catch((e) => res.status(400).send(e));
+
 }
 
 module.exports = {

@@ -8,12 +8,17 @@ let { Todo } = require('./../src/models/todo');
 const mockTodoId = "593e6104f5e8463308ebde5f";
 const mockTodoNotFounddId = new ObjectID();
 const mockTodoInvalidId = "593e6104f5e8463308ebde5fs";
+const mockTrueObjectId = "593fb71ceca29b39f84b3270";
+const mockPatch = { completed: true, text: 'updated test' }
 
 const mockTodos = [{
   _id: ObjectID(mockTodoId),
   text: "test todo 1"
 }, {
-  text: "test todo 2"
+  _id: ObjectID(mockTrueObjectId),
+  text: "test todo 2",
+  completed: true,
+  completedAt: 1000
 }, {
   text: "test todo 3"
 }];
@@ -23,6 +28,13 @@ mockTodoReturn = {
   _id: '593e6104f5e8463308ebde5f',
   completed: false,
   completedAt: null,
+  text: 'test todo 1'
+};
+
+mockTodoTrue = {
+  __v: 0,
+  _id: '593e6104f5e8463308ebde5f',
+  completed: true,
   text: 'test todo 1'
 };
 
@@ -109,8 +121,34 @@ describe('GET /todo/:id', () => {
   });
 });
 
+describe('PATCH /todo/:id', () => {
+  it('should update the todo', (done) => {
+    request(app)
+      .patch(`/todo/${mockTodoId}`)
+      .send(mockPatch)
+      .expect(200)
+      .expect((res) => {
+        expect(res.body.response.completedAt).toNotBe(null);
+        expect(res.body.response.completed).toBe(true);
+        expect(res.body.response.text).toEqual(mockPatch.text);
+      })
+      .end(done);
+  });
+  it('should clear completed at when completed is turned false', (done) => {
+    request(app)
+      .patch(`/todo/${mockTrueObjectId}`)
+      .send({ completed: false })
+      .expect(200)
+      .expect((res) => {
+        expect(res.body.response.completedAt).toBe(null);
+        expect(res.body.response.completed).toBe(false);
+      })
+      .end(done);
+  });
+});
+
 describe('DEL /todo/:id', () => {
-  it('should delete a todo by ID', (done) => {
+  it('should delete a todo by ID and integrate', (done) => {
     request(app)
       .delete(`/todo/${mockTodoId}`)
       .expect(200)
@@ -120,6 +158,19 @@ describe('DEL /todo/:id', () => {
           .get(`/todo/${mockTodoId}`).expect(404)
           .expect((res) => expect(res.body).toEqual({}))
           .end(done)
+      });
+  });
+  it('should delete a todo by ID', (done) => {
+    mockTodoReturn.id = mockTrueObjectId;
+    request(app)
+      .delete(`/todo/${mockTrueObjectId}`)
+      .expect(200)
+      .expect((res) => expect(res.body).toContain(mockTodoReturn))
+      .end((err, res) => {
+        Todo.findById(mockTrueObjectId).then((res) => {
+          expect((res) => expect(res.body).toEqual({}))
+          done();
+        });
       });
   });
 

@@ -14,11 +14,12 @@ app.get('/todo/:id', (req, res) => { mongoose.findById(req, res, Todo) });
 app.delete('/todo/:id', (req, res) => { mongoose.removeById(req, res, Todo) });
 app.put('/todo/:id', (req, res) => { mongoose.updateById(req, res, Todo) });
 app.post('/todo', (req, res) => { mongoose.saveNew(req, res, Todo) });
+app.patch('/todo/:id', (req, res) => { mongoose.updateById(req, res, Todo) });
 
-const port = process.env.PORT || 3000
+const port = process.env.PORT || 3000;
 
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
 
-module.exports = { app }
+module.exports = { app };
