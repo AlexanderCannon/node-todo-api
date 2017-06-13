@@ -83,7 +83,7 @@ describe('GET /todo', () => {
   });
 });
 
-describe('GET /todo', () => {
+describe('GET /todo/:id', () => {
   it('should get a todo by ID', (done) => {
     request(app)
       .get(`/todo/${mockTodoId}`)
@@ -103,6 +103,37 @@ describe('GET /todo', () => {
   it('should return an error an invalid ID', (done) => {
     request(app)
       .get(`/todo/${mockTodoInvalidId}`)
+      .expect(400)
+      .expect((res) => expect(res.body).toEqual({}))
+      .end(done);
+  });
+});
+
+describe('DEL /todo/:id', () => {
+  it('should delete a todo by ID', (done) => {
+    request(app)
+      .delete(`/todo/${mockTodoId}`)
+      .expect(200)
+      .expect((res) => expect(res.body).toContain(mockTodoReturn))
+      .end((err, res) => {
+        request(app)
+          .get(`/todo/${mockTodoId}`).expect(404)
+          .expect((res) => expect(res.body).toEqual({}))
+          .end(done)
+      });
+  });
+
+  it('should get a 404 for a not found ID', (done) => {
+    request(app)
+      .delete(`/todo/${mockTodoNotFounddId}`)
+      .expect(404)
+      .expect((res) => expect(res.body).toEqual({}))
+      .end(done);
+  });
+
+  it('should return an error an invalid ID', (done) => {
+    request(app)
+      .delete(`/todo/${mockTodoInvalidId}`)
       .expect(400)
       .expect((res) => expect(res.body).toEqual({}))
       .end(done);

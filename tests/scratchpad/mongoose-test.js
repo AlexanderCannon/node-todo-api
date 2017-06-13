@@ -1,6 +1,6 @@
 const { ObjectID } = require('mongodb');
 
-const { mongoose } = require('./../../src/models/mongoose');
+const { mongoose } = require('./../../src/models/mongoose-helper');
 const { Todo } = require('./../../src/models/todo');
 const { User } = require('./../../src/models/user');
 
@@ -24,11 +24,17 @@ function findById(id, Model) {
     console.log('Invalid ID');
   }
 }
+function remove(id, Model) {
+  Model.findByIdAndRemove(id).then((result) => {
+    console.log(result);
+  });
+}
 
-findById(mockUserId, User);
-findById(mockNotFoundUserId, User);
-findById(mockInvalidUserId, User);
+// findById(mockUserId, User);
+// findById(mockNotFoundUserId, User);
+// findById(mockInvalidUserId, User);
 
-findById(mockTodoId, Todo);
-findById(mockTodoNotFounddId, Todo);
-findById(mockTodoInvalidId, Todo);
+// findById(mockTodoId, Todo);
+// findById(mockTodoNotFounddId, Todo);
+// findById(mockTodoInvalidId, Todo);
+// remove('593fad3c65b5763fcc086d9a', Todo);

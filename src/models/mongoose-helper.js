@@ -12,21 +12,17 @@ function saveNew(req, res, Model) {
   });
   Model.save().then((doc) => {
     res.status(201).send(doc);
-  }, (e) => {
-    res.status(400).send(e);
-  });
+  }, (e) => res.status(400).send(e));
 }
+
 function getAll(req, res, Model) {
   Model.find().then((todos) => {
     res.status(200).send({ todos });
-  }, (e) => {
-    res.status(400).send(e);
-  });
+  }, (e) => res.status(400).send(e));
 }
 
 function findById(req, res, Model) {
-  const id = req.params.id;
-  doFindByID(id, Model)
+  doFindByID(req.params.id, Model)
     .then((response) => res.status(response.status).send(response.message));
 }
 
@@ -44,10 +40,27 @@ function doFindByID(id, Model) {
     }
   });
 }
+function removeById(req, res, Model) {
+  if (!ObjectID.isValid(req.params.id)) {
+    return res.status(400).send(`ID ${req.params.id} appears to be invalid`);
+  }
+  Model.findByIdAndRemove(req.params.id).then((result) => {
+    if (!result) {
+      return res.status(404).send(`Could not find document with id ${req.params.id}`)
+    }
+    res.status(200).send(result);
+  }, (e) => res.status(400).send(e));
+}
+
+function updateById(req, res, Model) {
+  
+}
 
 module.exports = {
   mongoose,
   saveNew,
   getAll,
-  findById
+  findById,
+  removeById,
+  updateById
 };
