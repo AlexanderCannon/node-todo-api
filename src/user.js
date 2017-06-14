@@ -22,11 +22,16 @@ function saveNew(req, res) {
     .catch((e) => res.status(400).send(e));
 }
 
+function findByToken(req, res, Model) {
+  res.send(req.user);
+}
+
 module.exports = {
   getAll,
   findById,
   removeById,
   updateById,
   saveNew,
-  updateById
+  updateById,
+  findByToken,
 }

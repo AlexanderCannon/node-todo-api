@@ -1,9 +1,10 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 
-const config = require('./config/config.js')
-let todo = require('./src/todo');
-let user = require('./src/user');
+const config = require('./config/config.js');
+const todo = require('./src/todo');
+const user = require('./src/user');
+const { authenticate } = require('./src/middlewear/authenticate');
 
 const app = express();
 
@@ -17,6 +18,7 @@ app.post('/todo', (req, res) => { todo.saveNew(req, res) });
 app.patch('/todo/:id', (req, res) => { todo.updateById(req, res) });
 
 app.get('/user', (req, res) => { user.getAll(req, res) });
+app.get('/user/me', authenticate, (req, res) => { user.findByToken(req, res) });
 app.get('/user/:id', (req, res) => { user.findById(req, res) });
 app.delete('/user/:id', (req, res) => { user.removeById(req, res) });
 app.put('/user/:id', (req, res) => { user.updateById(req, res) });
