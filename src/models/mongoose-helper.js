@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const { ObjectID } = require('mongodb');
 
-const dbUrl = process.env.MONGODB_URI || "mongodb://localhost:27017/Todo"
+const dbUrl = process.env.MONGODB_URI
 
 mongoose.Promise = global.Promise;
 mongoose.connect(dbUrl);

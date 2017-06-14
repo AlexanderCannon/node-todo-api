@@ -1,6 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 
+const config = require('./config/config.js')
 let todo = require('./src/todo');
 let { User } = require('./src/models/user');
 
@@ -15,8 +16,7 @@ app.put('/todo/:id', (req, res) => { todo.updateById(req, res) });
 app.post('/todo', (req, res) => { todo.saveNew(req, res) });
 app.patch('/todo/:id', (req, res) => { todo.updateById(req, res) });
 
-const port = process.env.PORT || 3000;
-
+const port = process.env.PORT
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
