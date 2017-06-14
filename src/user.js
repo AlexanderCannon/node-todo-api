@@ -11,19 +11,30 @@ function updateById(req, res) { mongoose.updateById(req, res, User) }
 
 function saveNew(req, res) {
   let body = _.pick(req.body, ['email', 'password', 'name']);
-  user = new User(body);
+  userRecord = new User(body);
 
-  user.save().then(() => {
+  userRecord.save().then(() => {
     return user.generateAuthToken()
   })
     .then((token) => {
-      res.header('x-auth', token).status(201).send(user)
+      res.header('x-auth', token).status(201).send(userRecord)
     })
     .catch((e) => res.status(400).send(e));
 }
 
-function findByToken(req, res, Model) {
+function findByToken(req, res) {
   res.send(req.user);
+}
+function logIn(req, res) {
+  const body = _.pick(req.body, ['email', 'password']);
+  User.findByCredentials(body.email, body.password)
+    .then((userRecord) => {
+      userRecord.generateAuthToken().then((token) => {
+        res.header('x-auth', token).send(userRecord)
+      })
+    }).catch((e) => {
+      res.status(401).send(e)
+    });
 }
 
 module.exports = {
@@ -34,4 +45,5 @@ module.exports = {
   saveNew,
   updateById,
   findByToken,
+  logIn
 }

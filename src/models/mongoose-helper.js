@@ -14,7 +14,7 @@ function saveNew(req, res, Model) {
 
 function getAll(req, res, Model) {
   Model.find().then((result) => {
-    res.status(200).send( result );
+    res.status(200).send(result);
   }, (e) => res.status(400).send(e));
 }
 
@@ -60,7 +60,6 @@ function updateById(req, res, Model) {
     }
     res.send({ response });
   }).catch((e) => res.status(400).send(e));
-
 }
 
 module.exports = {
