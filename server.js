@@ -3,7 +3,7 @@ const bodyParser = require('body-parser');
 
 const config = require('./config/config.js')
 let todo = require('./src/todo');
-let { User } = require('./src/models/user');
+let user = require('./src/user');
 
 const app = express();
 
@@ -15,6 +15,13 @@ app.delete('/todo/:id', (req, res) => { todo.removeById(req, res) });
 app.put('/todo/:id', (req, res) => { todo.updateById(req, res) });
 app.post('/todo', (req, res) => { todo.saveNew(req, res) });
 app.patch('/todo/:id', (req, res) => { todo.updateById(req, res) });
+
+app.get('/user', (req, res) => { user.getAll(req, res) });
+app.get('/user/:id', (req, res) => { user.findById(req, res) });
+app.delete('/user/:id', (req, res) => { user.removeById(req, res) });
+app.put('/user/:id', (req, res) => { user.updateById(req, res) });
+app.post('/user', (req, res) => { user.saveNew(req, res) });
+app.patch('/user/:id', (req, res) => { user.updateById(req, res) });
 
 const port = process.env.PORT
 app.listen(port, () => {

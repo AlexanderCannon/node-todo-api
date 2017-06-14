@@ -7,7 +7,13 @@ function getAll(req, res) { mongoose.getAll(req, res, Todo) }
 function findById(req, res) { mongoose.findById(req, res, Todo) }
 function removeById(req, res) { mongoose.removeById(req, res, Todo) }
 function updateById(req, res) { mongoose.updateById(req, res, Todo) }
-function saveNew(req, res) { mongoose.saveNew(req, res, Todo) }
+
+function saveNew(req, res) {
+  todo = new Todo({
+    text: req.body.text
+  });
+  mongoose.saveNew(req, res, todo)
+}
 
 function updateById(req, res) {
   req.body = _.pick(req.body, ['text', 'completed']);

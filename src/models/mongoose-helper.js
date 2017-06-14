@@ -7,17 +7,14 @@ mongoose.Promise = global.Promise;
 mongoose.connect(dbUrl);
 
 function saveNew(req, res, Model) {
-  Model = new Model({
-    text: req.body.text
-  });
   Model.save().then((doc) => {
     res.status(201).send(doc);
   }, (e) => res.status(400).send(e));
 }
 
 function getAll(req, res, Model) {
-  Model.find().then((todos) => {
-    res.status(200).send({ todos });
+  Model.find().then((result) => {
+    res.status(200).send( result );
   }, (e) => res.status(400).send(e));
 }
 
