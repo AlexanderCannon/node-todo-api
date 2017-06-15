@@ -182,7 +182,7 @@ describe('DEL /todo/:id', () => {
 });
 
 describe('GET /user/me', () => {
-  before(populateUsers);
+  beforeEach(populateUsers);
   it('should return user with authed request', (done) => {
     request(app)
       .get('/user/me')
@@ -204,7 +204,7 @@ describe('GET /user/me', () => {
 });
 
 describe('POST /user', () => {
-  before(populateUsers)
+  beforeEach(populateUsers)
   it('should create a user', (done => {
     request(app)
       .post('/user')
@@ -256,7 +256,7 @@ describe('POST /user', () => {
   });
 });
 describe('POST /user/login', () => {
-  before(populateUsers)
+  beforeEach(populateUsers);
   it('should login user and return auth token', (done) => {
     request(app)
       .post('/user/login')
@@ -315,5 +315,23 @@ describe('POST /user/login', () => {
         expect(res.headers['x-auth']).toNotExist();
       })
       .end(done()).catch((e) => done(e));
+  });
+});
+describe('DELETE /users/me/logout', () => {
+  beforeEach(populateUsers)
+  it('should remove auth token on logout', (done) => {
+    request(app)
+      .delete('/users/me/token')
+      .set('x-auth', mockUsers[0].tokens[0].token)
+      .expect(200)
+      .end((err, res) => {
+        if (err) {
+          return done(err);
+        }
+        User.findById(mockUsers[0]._id).then((user) => {
+          expect(user.tokens.length).toBe(0);
+          done();
+        }).catch((e) => done(e));
+      });
   });
 });

@@ -37,6 +37,12 @@ function logIn(req, res) {
     });
 }
 
+function logOut (req, res) {
+  req.user.removeToken(req.token).then(() =>{
+  res.status(200).send()
+  });
+}
+
 module.exports = {
   getAll,
   findById,
@@ -45,5 +51,6 @@ module.exports = {
   saveNew,
   updateById,
   findByToken,
-  logIn
+  logIn,
+  logOut
 }

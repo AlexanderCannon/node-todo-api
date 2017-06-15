@@ -19,12 +19,12 @@ app.patch('/todo/:id', (req, res) => todo.updateById(req, res));
 
 app.get('/user/me', authenticate, (req, res) => user.findByToken(req, res));
 app.post('/user/login', (req, res) => user.logIn(req, res));
+app.delete('/user/me/logout', authenticate, (req, res) => user.logOut(req, res));
 app.post('/user', (req, res) => user.saveNew(req, res));
-//
 // app.get('/user', (req, res) => user.getAll(req, res));
 // app.get('/user/:id', (req, res) => user.findById(req, res));
 // app.delete('/user/:id', (req, res) => user.removeById(req, res));
-// app.put('/user/:id', (req, res) => user.updateById(req, res));
+app.put('/user/:id', (req, res) => user.updateById(req, res));
 // app.patch('/user/:id', (req, res) => user.updateById(req, res));
 
 const port = process.env.PORT
