@@ -11,11 +11,11 @@ const app = express();
 app.use(bodyParser.json());
 
 app.get('/todo', authenticate, (req, res) => todo.getAll(req, res));
-app.get('/todo/:id', (req, res) => todo.findById(req, res));
+app.get('/todo/:id', authenticate, (req, res) => todo.findById(req, res));
 app.delete('/todo/:id', authenticate, (req, res) => todo.removeById(req, res));
-app.put('/todo/:id', (req, res) => todo.updateById(req, res));
+app.put('/todo/:id', authenticate, (req, res) => todo.updateById(req, res));
 app.post('/todo', authenticate, (req, res) => todo.saveNew(req, res));
-app.patch('/todo/:id', (req, res) => todo.updateById(req, res));
+app.patch('/todo/:id', authenticate, (req, res) => todo.updateById(req, res));
 
 app.get('/user/me', authenticate, (req, res) => user.findByToken(req, res));
 app.post('/user/login', (req, res) => user.logIn(req, res));
