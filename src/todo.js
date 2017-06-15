@@ -3,14 +3,19 @@ const _ = require('lodash');
 const mongoose = require('./models/mongoose-helper');
 let { Todo } = require('./models/todo');
 
-function getAll(req, res) { mongoose.getAll(req, res, Todo) }
+function getAll(req, res) {
+  Todo.find({ _creator: req.user.id }).then((result) => {
+    res.status(200).send(result);
+  }, (e) => res.status(400).send(e));
+}
 function findById(req, res) { mongoose.findById(req, res, Todo) }
 function removeById(req, res) { mongoose.removeById(req, res, Todo) }
 function updateById(req, res) { mongoose.updateById(req, res, Todo) }
 
 function saveNew(req, res) {
   todo = new Todo({
-    text: req.body.text
+    text: req.body.text,
+    _creator: req.user._id
   });
   mongoose.saveNew(req, res, todo)
 }
