@@ -5,10 +5,29 @@ const { ObjectID } = require('mongodb');
 const { app } = require('./../server');
 const { Todo } = require('./../src/models/todo');
 const { User } = require('./../src/models/user');
-const { mockTodoId, mockTodoNotFounddId, mockTodoInvalidId, mockTrueObjectId, mockPatch, mockTodos, populateTodos, mockTodoReturn, mockTodoTrue }
-  = require('./seed/server-todo');
-const { validObjectId, mockUniqueEmail, mockinValidEmail, mockValidPassword, mockInvalidPassword, mockValidUser, mockInvalidPasswordUser, mockDuplicateEmailUser, mockInvalidEmailUser, mockNoNameUser, mockUsers, populateUsers }
-  = require('./seed/server-user.js');
+const {
+  mockTodoId,
+  mockTodoNotFounddId,
+  mockTodoInvalidId, mockTrueObjectId,
+  mockPatch,
+  mockTodos,
+  populateTodos,
+  mockTodoReturn,
+  mockTodoTrue
+     } = require('./seed/server-todo');
+const {
+  validObjectId,
+  mockUniqueEmail,
+  mockInvalidPassword,
+  mockValidUser,
+  mockInvalidPasswordUser,
+  mockDuplicateEmailUser,
+  mockInvalidEmailUser,
+  mockNoNameUser,
+  mockUsers,
+  mockValidPassword,
+  populateUsers
+} = require('./seed/server-user.js');
 
 describe('POST/todos', () => {
   beforeEach(populateTodos);
@@ -204,7 +223,7 @@ describe('POST /user', () => {
           expect(user).toExist();
           expect(user.password).toNotBe(mockValidPassword);
           done();
-        });
+        }).catch((e) => done(e))
       });
   }));
   it('should return validation error for too short password', (done) => {
@@ -234,5 +253,67 @@ describe('POST /user', () => {
       .send(mockNoNameUser)
       .expect(400)
       .end(done());
+  });
+});
+describe('POST /user/login', () => {
+  before(populateUsers)
+  it('should login user and return auth token', (done) => {
+    request(app)
+      .post('/user/login')
+      .send({
+        email: mockUsers[0].email,
+        password: mockUsers[0].password
+      })
+      .expect(200)
+      .expect((res) => {
+        expect(res.headers['x-auth']).toExist();
+      })
+      .end((err, res) => {
+        if (err) {
+          return done(err);
+        }
+
+        User.findById(users[1]._id).then((user) => {
+          expect(user.tokens[0]).toInclude({
+            access: 'auth',
+            token: res.headers['x-auth']
+          });
+          done();
+        }).catch((e) => done(e));
+      });
+  });
+  it('should reject invalid login', (done) => {
+    request(app)
+      .post('/users/login')
+      .send({
+        email: mockUsers[0].email,
+        password: mockUsers[0].password + '1'
+      })
+      .expect(404)
+      .expect((res) => {
+        expect(res.headers['x-auth']).toNotExist();
+      })
+      .end((err, res) => {
+        if (err) {
+          return done(err);
+        }
+        User.findById(mockUsers[0]._id).then((user) => {
+          expect(user.tokens.length).toBe(0);
+          done();
+        }).catch((e) => done(e));
+      });
+  });
+  it('should reject invalid user', (done) => {
+    request(app)
+      .post('/users/login')
+      .send({
+        email: mockUsers[0].email,
+        password: mockUsers[0].password + '1'
+      })
+      .expect(404)
+      .expect((res) => {
+        expect(res.headers['x-auth']).toNotExist();
+      })
+      .end(done()).catch((e) => done(e));
   });
 });

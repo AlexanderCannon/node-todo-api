@@ -14,7 +14,7 @@ function saveNew(req, res) {
   userRecord = new User(body);
 
   userRecord.save().then(() => {
-    return user.generateAuthToken()
+    return userRecord.generateAuthToken()
   })
     .then((token) => {
       res.header('x-auth', token).status(201).send(userRecord)

@@ -39,4 +39,17 @@ const populateUsers = ((done) => {
   }).then(() => done());
 });
 
-module.exports = { validObjectId, mockUniqueEmail, mockInvalidPassword, mockValidUser, mockInvalidPasswordUser, mockDuplicateEmailUser, mockInvalidEmailUser, mockNoNameUser, mockUsers, populateUsers };
+
+module.exports = {
+  validObjectId,
+  mockUniqueEmail,
+  mockInvalidPassword,
+  mockValidUser,
+  mockInvalidPasswordUser,
+  mockDuplicateEmailUser,
+  mockInvalidEmailUser,
+  mockNoNameUser,
+  mockUsers,
+  mockValidPassword,
+  populateUsers
+};
