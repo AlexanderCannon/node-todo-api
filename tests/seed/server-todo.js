@@ -1,5 +1,5 @@
 const { ObjectID } = require('mongodb');
-
+const { validObjectId,  invalidObjectId } = require('./server-user')
 const { Todo } = require('./../../src/models/todo');
 
 const mockTodoId = "593e6104f5e8463308ebde5f";
@@ -10,14 +10,17 @@ const mockPatch = { completed: true, text: 'updated test' }
 
 const mockTodos = [{
   _id: ObjectID(mockTodoId),
-  text: "test todo 1"
+  text: "test todo 1",
+  _creator: ObjectID(validObjectId)
 }, {
   _id: ObjectID(mockTrueObjectId),
   text: "test todo 2",
   completed: true,
-  completedAt: 1000
+  completedAt: 1000,
+  _creator: ObjectID(validObjectId)
 }, {
-  text: "test todo 3"
+  text: "test todo 3",
+  _creator: ObjectID(invalidObjectId)
 }];
 
 const mockTodoReturn = {

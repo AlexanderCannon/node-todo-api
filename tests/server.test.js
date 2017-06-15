@@ -1,42 +1,24 @@
 const expect = require('expect');
 const request = require('supertest');
-const { ObjectID } = require('mongodb');
+const {ObjectID} = require('mongodb');
 
-const { app } = require('./../server');
-const { Todo } = require('./../src/models/todo');
-const { User } = require('./../src/models/user');
-const {
-  mockTodoId,
-  mockTodoNotFounddId,
-  mockTodoInvalidId, mockTrueObjectId,
-  mockPatch,
-  mockTodos,
-  populateTodos,
-  mockTodoReturn,
-  mockTodoTrue
-     } = require('./seed/server-todo');
-const {
-  validObjectId,
-  mockUniqueEmail,
-  mockInvalidPassword,
-  mockValidUser,
-  mockInvalidPasswordUser,
-  mockDuplicateEmailUser,
-  mockInvalidEmailUser,
-  mockNoNameUser,
-  mockUsers,
-  mockValidPassword,
-  populateUsers
-} = require('./seed/server-user.js');
+const {app} = require('./../server');
+const {Todo} = require('./../src/models/todo');
+const {User} = require('./../src/models/user');
+const {todos, populateTodos, users, populateUsers} = require('./seed/seed');
 
-describe('POST/todos', () => {
-  beforeEach(populateTodos);
+beforeEach(populateUsers);
+beforeEach(populateTodos);
+
+describe('POST /todo', () => {
   it('should create a new todo', (done) => {
-    let text = 'Todo test text';
+    var text = 'Test todo text';
+
     request(app)
       .post('/todo')
-      .send({ text })
-      .expect(201)
+      .set('x-auth', users[0].tokens[0].token)
+      .send({text})
+      .expect(200)
       .expect((res) => {
         expect(res.body.text).toBe(text);
       })
@@ -44,225 +26,235 @@ describe('POST/todos', () => {
         if (err) {
           return done(err);
         }
-        Todo.find().then((todos) => {
-          expect(todos.length).toBe(4);
-          expect(todos[3].text).toBe(text);
+
+        Todo.find({text}).then((todos) => {
+          expect(todos.length).toBe(1);
+          expect(todos[0].text).toBe(text);
           done();
-        })
-          .catch((e) => done(e));
-      })
+        }).catch((e) => done(e));
+      });
   });
 
-  it('should not create a todo with invaid body data', (done) => {
+  it('should not create todo with invalid body data', (done) => {
     request(app)
       .post('/todo')
+      .set('x-auth', users[0].tokens[0].token)
       .send({})
       .expect(400)
       .end((err, res) => {
         if (err) {
           return done(err);
         }
+
         Todo.find().then((todos) => {
-          expect(todos.length).toBe(3);
+          expect(todos.length).toBe(2);
           done();
-        })
-          .catch((e) => done(e));
+        }).catch((e) => done(e));
       });
   });
 });
 
 describe('GET /todo', () => {
-  beforeEach(populateTodos);
   it('should get all todos', (done) => {
     request(app)
       .get('/todo')
+      .set('x-auth', users[0].tokens[0].token)
       .expect(200)
-      .expect((res) => expect(res.body.length).toBe(3))
+      .expect((res) => {
+        expect(res.body.todos.length).toBe(1);
+      })
       .end(done);
   });
 });
 
 describe('GET /todo/:id', () => {
-  beforeEach(populateTodos);
-  it('should get a todo by ID', (done) => {
+  it('should return todo doc', (done) => {
     request(app)
-      .get(`/todo/${mockTodoId}`)
+      .get(`/todo/${todos[0]._id.toHexString()}`)
       .expect(200)
-      .expect((res) => expect(res.body).toContain(mockTodoReturn))
+      .expect((res) => {
+        expect(res.body.todo.text).toBe(todos[0].text);
+      })
       .end(done);
   });
 
-  it('should get a 404 for a not found ID', (done) => {
+  it('should return 404 if todo not found', (done) => {
+    var hexId = new ObjectID().toHexString();
+
     request(app)
-      .get(`/todo/${mockTodoNotFounddId}`)
+      .get(`/todo/${hexId}`)
       .expect(404)
-      .expect((res) => expect(res.body).toEqual({}))
       .end(done);
   });
 
-  it('should return an error an invalid ID', (done) => {
+  it('should return 404 for non-object ids', (done) => {
     request(app)
-      .get(`/todo/${mockTodoInvalidId}`)
-      .expect(400)
-      .expect((res) => expect(res.body).toEqual({}))
+      .get('/todo/123abc')
+      .expect(404)
+      .end(done);
+  });
+});
+
+describe('DELETE /todo/:id', () => {
+  it('should remove a todo', (done) => {
+    var hexId = todos[1]._id.toHexString();
+
+    request(app)
+      .delete(`/todo/${hexId}`)
+      .expect(200)
+      .expect((res) => {
+        expect(res.body.todo._id).toBe(hexId);
+      })
+      .end((err, res) => {
+        if (err) {
+          return done(err);
+        }
+
+        Todo.findById(hexId).then((todo) => {
+          expect(todo).toNotExist();
+          done();
+        }).catch((e) => done(e));
+      });
+  });
+
+  it('should return 404 if todo not found', (done) => {
+    var hexId = new ObjectID().toHexString();
+
+    request(app)
+      .delete(`/todo/${hexId}`)
+      .expect(404)
+      .end(done);
+  });
+
+  it('should return 404 if object id is invalid', (done) => {
+    request(app)
+      .delete('/todo/123abc')
+      .expect(404)
       .end(done);
   });
 });
 
 describe('PATCH /todo/:id', () => {
-  beforeEach(populateTodos);
   it('should update the todo', (done) => {
+    var hexId = todos[0]._id.toHexString();
+    var text = 'This should be the new text';
+
     request(app)
-      .patch(`/todo/${mockTodoId}`)
-      .send(mockPatch)
+      .patch(`/todo/${hexId}`)
+      .send({
+        completed: true,
+        text
+      })
       .expect(200)
       .expect((res) => {
-        expect(res.body.response.completedAt).toNotBe(null);
-        expect(res.body.response.completed).toBe(true);
-        expect(res.body.response.text).toEqual(mockPatch.text);
+        expect(res.body.todo.text).toBe(text);
+        expect(res.body.todo.completed).toBe(true);
+        expect(res.body.todo.completedAt).toBeA('number');
       })
       .end(done);
   });
-  it('should clear completed at when completed is turned false', (done) => {
+
+  it('should clear completedAt when todo is not completed', (done) => {
+    var hexId = todos[1]._id.toHexString();
+    var text = 'This should be the new text!!';
+
     request(app)
-      .patch(`/todo/${mockTrueObjectId}`)
-      .send({ completed: false })
+      .patch(`/todo/${hexId}`)
+      .send({
+        completed: false,
+        text
+      })
       .expect(200)
       .expect((res) => {
-        expect(res.body.response.completedAt).toBe(null);
-        expect(res.body.response.completed).toBe(false);
+        expect(res.body.todo.text).toBe(text);
+        expect(res.body.todo.completed).toBe(false);
+        expect(res.body.todo.completedAt).toNotExist();
       })
-      .end(done);
-  });
-});
-
-describe('DEL /todo/:id', () => {
-  beforeEach(populateTodos);
-  it('should delete a todo by ID and integrate', (done) => {
-    request(app)
-      .delete(`/todo/${mockTodoId}`)
-      .expect(200)
-      .expect((res) => expect(res.body).toContain(mockTodoReturn))
-      .end((err, res) => {
-        request(app)
-          .get(`/todo/${mockTodoId}`).expect(404)
-          .expect((res) => expect(res.body).toEqual({}))
-          .end(done)
-      });
-  });
-  it('should delete a todo by ID', (done) => {
-    mockTodoReturn.id = mockTrueObjectId;
-    request(app)
-      .delete(`/todo/${mockTrueObjectId}`)
-      .expect(200)
-      .expect((res) => expect(res.body).toContain(mockTodoReturn))
-      .end((err, res) => {
-        Todo.findById(mockTrueObjectId).then((res) => {
-          expect((res) => expect(res.body).toEqual({}))
-          done();
-        });
-      });
-  });
-
-  it('should get a 404 for a not found ID', (done) => {
-    request(app)
-      .delete(`/todo/${mockTodoNotFounddId}`)
-      .expect(404)
-      .expect((res) => expect(res.body).toEqual({}))
-      .end(done);
-  });
-
-  it('should return an error an invalid ID', (done) => {
-    request(app)
-      .delete(`/todo/${mockTodoInvalidId}`)
-      .expect(400)
-      .expect((res) => expect(res.body).toEqual({}))
       .end(done);
   });
 });
 
 describe('GET /user/me', () => {
-  beforeEach(populateUsers);
-  it('should return user with authed request', (done) => {
+  it('should return user if authenticated', (done) => {
     request(app)
       .get('/user/me')
-      .set('x-auth', mockUsers[0].tokens[0].token)
+      .set('x-auth', users[0].tokens[0].token)
       .expect(200)
       .expect((res) => {
-        expect(res.body.id).toBe(mockUsers[0]._id.toHexString())
-        expect(res.body.email).toBe(mockUsers[0].email)
+        expect(res.body._id).toBe(users[0]._id.toHexString());
+        expect(res.body.email).toBe(users[0].email);
       })
-      .end(done());
+      .end(done);
   });
-  it('shouldn\'t return user with unauthed request', (done) => {
+
+  it('should return 401 if not authenticated', (done) => {
     request(app)
       .get('/user/me')
       .expect(401)
-      .expect((res) => expect(res.body).toEqual({}))
-      .end(done());
+      .expect((res) => {
+        expect(res.body).toEqual({});
+      })
+      .end(done);
   });
 });
 
 describe('POST /user', () => {
-  beforeEach(populateUsers)
-  it('should create a user', (done => {
+  it('should create a user', (done) => {
+    var email = 'example@example.com';
+    var password = '123mnb!';
+
     request(app)
       .post('/user')
-      .send(mockValidUser)
-      .expect(201)
+      .send({email, password})
+      .expect(200)
       .expect((res) => {
-        expect(res.headers['x-auth']).toExist()
+        expect(res.headers['x-auth']).toExist();
         expect(res.body._id).toExist();
-        expect(res.body.email).toBe(mockUniqueEmail);
+        expect(res.body.email).toBe(email);
       })
       .end((err) => {
         if (err) {
           return done(err);
         }
-        User.findOne({ email: mockUniqueEmail }).then((user) => {
+
+        User.findOne({email}).then((user) => {
           expect(user).toExist();
-          expect(user.password).toNotBe(mockValidPassword);
+          expect(user.password).toNotBe(password);
           done();
-        }).catch((e) => done(e))
+        }).catch((e) => done(e));
       });
-  }));
-  it('should return validation error for too short password', (done) => {
-    request(app)
-      .post('/user')
-      .send(mockInvalidPasswordUser)
-      .expect(400)
-      .end(done());
   });
-  it('should return validation error for invalid email', (done) => {
+
+  it('should return validation errors if request invalid', (done) => {
     request(app)
       .post('/user')
-      .send(mockInvalidEmailUser)
+      .send({
+        email: 'and',
+        password: '123'
+      })
       .expect(400)
-      .end(done());
+      .end(done);
   });
-  it('should not create a user if email already in use', (done) => {
+
+  it('should not create user if email in use', (done) => {
     request(app)
       .post('/user')
-      .send(mockDuplicateEmailUser)
+      .send({
+        email: users[0].email,
+        password: 'Password123!'
+      })
       .expect(400)
-      .end(done());
-  });
-  it('should not create a user if they have no name', (done) => {
-    request(app)
-      .post('/user')
-      .send(mockNoNameUser)
-      .expect(400)
-      .end(done());
+      .end(done);
   });
 });
+
 describe('POST /user/login', () => {
-  beforeEach(populateUsers);
   it('should login user and return auth token', (done) => {
     request(app)
       .post('/user/login')
       .send({
-        email: mockUsers[0].email,
-        password: mockUsers[0].password
+        email: users[1].email,
+        password: users[1].password
       })
       .expect(200)
       .expect((res) => {
@@ -282,14 +274,15 @@ describe('POST /user/login', () => {
         }).catch((e) => done(e));
       });
   });
+
   it('should reject invalid login', (done) => {
     request(app)
-      .post('/users/login')
+      .post('/user/login')
       .send({
-        email: mockUsers[0].email,
-        password: mockUsers[0].password + '1'
+        email: users[1].email,
+        password: users[1].password + '1'
       })
-      .expect(404)
+      .expect(400)
       .expect((res) => {
         expect(res.headers['x-auth']).toNotExist();
       })
@@ -297,38 +290,27 @@ describe('POST /user/login', () => {
         if (err) {
           return done(err);
         }
-        User.findById(mockUsers[0]._id).then((user) => {
+
+        User.findById(users[1]._id).then((user) => {
           expect(user.tokens.length).toBe(0);
           done();
         }).catch((e) => done(e));
       });
   });
-  it('should reject invalid user', (done) => {
-    request(app)
-      .post('/users/login')
-      .send({
-        email: mockUsers[0].email,
-        password: mockUsers[0].password + '1'
-      })
-      .expect(404)
-      .expect((res) => {
-        expect(res.headers['x-auth']).toNotExist();
-      })
-      .end(done()).catch((e) => done(e));
-  });
 });
-describe('DELETE /users/me/logout', () => {
-  beforeEach(populateUsers)
+
+describe('DELETE /user/me/logout', () => {
   it('should remove auth token on logout', (done) => {
     request(app)
-      .delete('/users/me/token')
-      .set('x-auth', mockUsers[0].tokens[0].token)
+      .delete('/user/me/logout')
+      .set('x-auth', users[0].tokens[0].token)
       .expect(200)
       .end((err, res) => {
         if (err) {
           return done(err);
         }
-        User.findById(mockUsers[0]._id).then((user) => {
+
+        User.findById(users[0]._id).then((user) => {
           expect(user.tokens.length).toBe(0);
           done();
         }).catch((e) => done(e));
